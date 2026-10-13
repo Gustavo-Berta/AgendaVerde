@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <!-- figma:head-start -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agenda Verde — Agendamento para clínicas de Itapetininga</title>
+    <meta name="description" content="Plataforma de agendamento para pequenas clínicas de Itapetininga/SP: cadastro de clínicas, médicos e pacientes." />
+    <link rel="stylesheet" href="style.css" />
+    <!-- figma:head-end -->
+  </head>
+  <body>
+    <!-- figma:body-start -->
+    <a class="skip" href="#main">Pular para o conteúdo</a>
+
+
+    <div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title" hidden>
+      <div class="gate-panel">
+        <p class="eyebrow">Agenda Verde · Itapetininga</p>
+        <h1 id="gate-title">Quem está acessando?</h1>
+        <p class="lead">Confirme o seu perfil para continuar. Cada perfil enxerga apenas o que lhe cabe.</p>
+
+        <div class="roles" id="role-choices" role="group" aria-label="Perfil de acesso">
+          <button type="button" class="role" data-pick="patient"><b>Paciente</b><span>Agendar e ver as próprias consultas.</span></button>
+          <button type="button" class="role" data-pick="staff"><b>Clínica / Recepção</b><span>Cadastrar clínicas e médicos, gerir agenda.</span></button>
+          <button type="button" class="role" data-pick="admin"><b>Administrador</b><span>Acesso total, inclusive remoção de cadastros.</span></button>
+        </div>
+
+        <form class="gate-form" id="gate-patient" novalidate hidden>
+          <label>Seu CPF
+            <input name="cpf" inputmode="numeric" placeholder="000.000.000-00" autocomplete="off" required />
+          </label>
+          <div class="gate-new" id="gate-new" hidden>
+            <p class="hint">CPF ainda não cadastrado. Complete o seu cadastro de paciente:</p>
+            <label>Nome completo<input name="name" /></label>
+            <label>Data de nascimento<input type="date" name="birth" /></label>
+            <label>Telefone / WhatsApp<input name="phone" inputmode="tel" placeholder="(15) 99999-0000" /></label>
+            <label>Convênio
+              <select name="plan"><option>Particular</option><option>SUS</option><option>Unimed</option><option>Amil</option><option>Bradesco Saúde</option><option>Outro</option></select>
+            </label>
+          </div>
+          <p class="msg" role="status"></p>
+          <div class="gate-actions"><button class="btn btn-primary" type="submit">Continuar</button><button class="btn btn-ghost" type="button" data-back>Voltar</button></div>
+        </form>
+
+        <form class="gate-form" id="gate-staff" novalidate hidden>
+          <label>Código de acesso da clínica
+            <input name="code" type="password" autocomplete="off" required />
+          </label>
+          <p class="msg" role="status"></p>
+          <div class="gate-actions"><button class="btn btn-primary" type="submit">Entrar</button><button class="btn btn-ghost" type="button" data-back>Voltar</button></div>
+        </form>
+
+        <form class="gate-form" id="gate-admin" novalidate hidden>
+          <label>Usuário<input name="user" autocomplete="username" required /></label>
+          <label>Senha<input name="pass" type="password" autocomplete="current-password" required /></label>
+          <p class="msg" role="status"></p>
+          <div class="gate-actions"><button class="btn btn-primary" type="submit">Entrar</button><button class="btn btn-ghost" type="button" data-back>Voltar</button></div>
+        </form>
+      </div>
+    </div>
+
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="Agenda Verde — início">
+        <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+          <rect width="28" height="28" rx="6" fill="currentColor" />
+          <path d="M14 6v16M6 14h16" stroke="#e8f5ec" stroke-width="3.2" stroke-linecap="round" />
+        </svg>
+        <span>Agenda Verde</span>
+        <small>Itapetininga · SP</small>
+      </a>
+      <nav class="nav" id="nav" aria-label="Principal">
+        <a href="#inicio" data-view="inicio">Início</a>
+        <a href="#agendar" data-view="agendar">Agendar</a>
+        <a href="#clinicas" data-view="clinicas" data-roles="staff admin">Clínicas</a>
+        <a href="#medicos" data-view="medicos" data-roles="staff admin">Médicos</a>
+        <a href="#pacientes" data-view="pacientes" id="nav-pacientes">Pacientes</a>
+      </nav>
+      <div class="session" id="session" hidden>
+        <span class="role-badge" id="role-badge"></span>
+        <button class="link" id="logout" type="button">Sair</button>
+      </div>
+    </header>
+
+    <main id="main">
+      <!-- INÍCIO -->
+      <section class="view" id="view-inicio" data-title="Início">
+        <div class="hero">
+          <div class="hero-text">
+            <p class="eyebrow">Para clínicas de bairro, de verdade</p>
+            <h1>A agenda da sua clínica, sem planilha e sem telefone ocupado.</h1>
+            <p class="lead" id="hero-lead">
+              Cadastre a clínica, os médicos por especialidade e os pacientes. Marque consultas em Itapetininga
+              em poucos cliques, sem conflito de horário.
+            </p>
+            <div class="actions">
+              <a class="btn btn-primary" href="#agendar">Agendar consulta</a>
+              <a class="btn btn-ghost" href="#clinicas" data-roles="staff admin">Cadastrar clínica</a>
+              <a class="btn btn-ghost" href="#pacientes" data-roles="patient">Meus dados</a>
+            </div>
+          </div>
+          <aside class="hero-card" aria-label="Resumo" data-roles="staff admin">
+            <h2>Hoje na plataforma</h2>
+            <dl class="stats" id="stats"></dl>
+            <p class="today" id="today-list"></p>
+          </aside>
+        </div>
+
+        <ol class="steps">
+          <li><span>01</span><h3>Clínica</h3><p>Registre o consultório, bairro e telefone de contato.</p></li>
+          <li><span>02</span><h3>Médicos</h3><p>Vincule profissionais e suas especialidades à clínica.</p></li>
+          <li><span>03</span><h3>Pacientes</h3><p>Mantenha o cadastro com convênio e dados de contato.</p></li>
+          <li><span>04</span><h3>Consulta</h3><p>Escolha data e horário livre. A plataforma evita duplicidade.</p></li>
+        </ol>
+      </section>
+
+      <!-- AGENDAR -->
+      <section class="view" id="view-agendar" data-title="Agendar">
+        <header class="view-head">
+          <p class="eyebrow">Agendamento</p>
+          <h2>Marcar uma consulta</h2>
+        </header>
+        <div class="split">
+          <form class="card form" id="form-agendar" novalidate>
+            <label>Clínica
+              <select name="clinic" required></select>
+            </label>
+            <label>Especialidade
+              <select name="specialty"></select>
+            </label>
+            <label>Médico
+              <select name="doctor" required></select>
+            </label>
+            <label>Paciente
+              <select name="patient" required></select>
+            </label>
+            <label>Data
+              <input type="date" name="date" required />
+            </label>
+            <fieldset>
+              <legend>Horário</legend>
+              <div class="slots" id="slots" role="radiogroup" aria-label="Horários disponíveis"></div>
+            </fieldset>
+            <p class="msg" id="msg-agendar" role="status"></p>
+            <button class="btn btn-primary" type="submit">Confirmar agendamento</button>
+          </form>
+
+          <div>
+            <h3 class="list-title">Próximas consultas <span id="count-appts"></span></h3>
+            <ul class="list" id="list-appts"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLÍNICAS -->
+      <section class="view" id="view-clinicas" data-title="Clínicas">
+        <header class="view-head">
+          <p class="eyebrow">Cadastro</p>
+          <h2>Clínicas</h2>
+        </header>
+        <div class="split">
+          <form class="card form" id="form-clinica" novalidate>
+            <label>Nome da clínica
+              <input name="name" required placeholder="Ex.: Clínica Bem Viver" />
+            </label>
+            <label>CNPJ
+              <input name="cnpj" required inputmode="numeric" placeholder="00.000.000/0000-00" />
+            </label>
+            <label>Bairro
+              <input name="district" required placeholder="Centro" />
+            </label>
+            <label>Endereço
+              <input name="address" required placeholder="Rua, número" />
+            </label>
+            <label>Telefone
+              <input name="phone" required inputmode="tel" placeholder="(15) 3000-0000" />
+            </label>
+            <p class="msg" role="status"></p>
+            <button class="btn btn-primary" type="submit">Cadastrar clínica</button>
+          </form>
+          <div>
+            <h3 class="list-title">Clínicas cadastradas <span id="count-clinics"></span></h3>
+            <ul class="list" id="list-clinics"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- MÉDICOS -->
+      <section class="view" id="view-medicos" data-title="Médicos">
+        <header class="view-head">
+          <p class="eyebrow">Cadastro</p>
+          <h2>Médicos e especialidades</h2>
+        </header>
+        <div class="split">
+          <form class="card form" id="form-medico" novalidate>
+            <label>Nome completo
+              <input name="name" required placeholder="Dra. Helena Martins" />
+            </label>
+            <label>CRM-SP
+              <input name="crm" required inputmode="numeric" placeholder="123456" />
+            </label>
+            <label>Especialidade
+              <select name="specialty" required></select>
+            </label>
+            <label>Clínica
+              <select name="clinic" required></select>
+            </label>
+            <label>Atende em
+              <input name="hours" placeholder="Seg a sex, 8h às 17h" />
+            </label>
+            <p class="msg" role="status"></p>
+            <button class="btn btn-primary" type="submit">Cadastrar médico</button>
+          </form>
+          <div>
+            <div class="filter" id="filter-specialty" role="group" aria-label="Filtrar por especialidade"></div>
+            <h3 class="list-title">Corpo clínico <span id="count-doctors"></span></h3>
+            <ul class="list" id="list-doctors"></ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- PACIENTES -->
+      <section class="view" id="view-pacientes" data-title="Pacientes">
+        <header class="view-head">
+          <p class="eyebrow">Cadastro</p>
+          <h2 id="pacientes-title">Pacientes</h2>
+        </header>
+        <div class="split">
+          <form class="card form" id="form-paciente" data-roles="staff admin" novalidate>
+            <label>Nome completo
+              <input name="name" required placeholder="Maria Aparecida Souza" />
+            </label>
+            <label>CPF
+              <input name="cpf" required inputmode="numeric" placeholder="000.000.000-00" />
+            </label>
+            <label>Data de nascimento
+              <input type="date" name="birth" required />
+            </label>
+            <label>Telefone / WhatsApp
+              <input name="phone" required inputmode="tel" placeholder="(15) 99999-0000" />
+            </label>
+            <label>Convênio
+              <select name="plan" required>
+                <option>Particular</option>
+                <option>SUS</option>
+                <option>Unimed</option>
+                <option>Amil</option>
+                <option>Bradesco Saúde</option>
+                <option>Outro</option>
+              </select>
+            </label>
+            <p class="msg" role="status"></p>
+            <button class="btn btn-primary" type="submit">Cadastrar paciente</button>
+          </form>
+          <div>
+            <input class="search" data-roles="staff admin" id="search-patients" type="search" placeholder="Buscar paciente por nome" aria-label="Buscar paciente" />
+            <h3 class="list-title" id="pacientes-list-title">Pacientes cadastrados <span id="count-patients"></span></h3>
+            <ul class="list" id="list-patients"></ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Agenda Verde · Protótipo para clínicas de Itapetininga/SP</span>
+      <button class="link" id="reset-data" type="button">Restaurar dados de exemplo</button>
+    </footer>
+    <!-- figma:body-end -->
+    <script src="script.js" defer></script>
+  </body>
+</html>
